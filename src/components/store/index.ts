@@ -1,0 +1,12 @@
+export { default as HeroSection } from "./HeroSection";
+export { default as CategoriesSection } from "./CategoriesSection";
+export { default as FeaturedProducts } from "./FeaturedProducts";
+export { default as FeaturesSection } from "./FeaturesSection";
+export { default as NewsletterSection } from "./NewsletterSection";
+export { default as ProductsGrid } from "./ProductsGrid";
+export { default as ProductsFilters } from "./ProductsFilters";
+export { default as ProductDetailClient } from "./ProductDetailClient";
+export { default as RelatedProducts } from "./RelatedProducts";
+export { default as FaqSection } from "./FaqSection";
+export { default as TestimonialsSection } from "./TestimonialsSection";
+export { default as ReviewForm } from "./ReviewForm";
