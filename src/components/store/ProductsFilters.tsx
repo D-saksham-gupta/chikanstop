@@ -92,7 +92,7 @@ export default function ProductsFilters({ categories }: ProductsFiltersProps) {
   );
 
   return (
-    <div className="bg-white rounded-lg p-6 space-y-6 sticky top-20">
+    <div className="bg-white rounded-lg p-6 space-y-6 lg:sticky lg:top-20">
       {/* Clear Filters */}
       {hasFilters && (
         <div className="flex items-center justify-between pb-4 border-b">

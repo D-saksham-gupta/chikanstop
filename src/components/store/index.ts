@@ -10,3 +10,4 @@ export { default as RelatedProducts } from "./RelatedProducts";
 export { default as FaqSection } from "./FaqSection";
 export { default as TestimonialsSection } from "./TestimonialsSection";
 export { default as ReviewForm } from "./ReviewForm";
+export { default as MobileFilterToggle } from "./MobileFilterToggle";

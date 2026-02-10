@@ -5,10 +5,15 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import ProductsGrid from "@/components/store/ProductsGrid";
 import ProductsFilters from "@/components/store/ProductsFilters";
+import MobileFilterToggle from "@/components/store/MobileFilterToggle";
 import { LoadingSpinner } from "@/components/ui";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { serializeProduct } from "@/lib/serialize";
+import {
+  serializeProduct,
+  serializeDoc,
+  serializeCategory,
+} from "@/lib/serialize";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -45,11 +50,7 @@ export default async function CategoryPage({
     .sort({ name: 1 })
     .lean();
 
-  const plainCategories = allCategories.map((cat) => ({
-    _id: cat._id.toString(),
-    name: cat.name,
-    slug: cat.slug,
-  }));
+  const plainCategories = allCategories.map(serializeCategory);
 
   // Build query
   const query: any = {
@@ -116,22 +117,8 @@ export default async function CategoryPage({
 
   const total = await Product.countDocuments(query);
 
-  // const plainProducts = products.map((product) => ({
-  //   ...product,
-  //   _id: product._id.toString(),
-  //   category: {
-  //     _id: product.category._id.toString(),
-  //     name: product.category.name,
-  //     slug: product.category.slug,
-  //   },
-  //   createdAt: product.createdAt
-  //     ? new Date(product.createdAt).toISOString()
-  //     : new Date().toISOString(),
-  //   updatedAt: product.updatedAt
-  //     ? new Date(product.updatedAt).toISOString()
-  //     : new Date().toISOString(),
-  // }));
   const plainProducts = products.map(serializeProduct);
+
   const plainCategory = {
     _id: category._id.toString(),
     name: category.name,
@@ -157,21 +144,30 @@ export default async function CategoryPage({
         </nav>
 
         {/* Category Header */}
-        <div className="mb-8 bg-white rounded-xl p-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">
+        <div className="mb-8 bg-white rounded-xl p-6 md:p-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
             {plainCategory.name}
           </h1>
           {plainCategory.description && (
-            <p className="text-lg text-gray-600">{plainCategory.description}</p>
+            <p className="text-base md:text-lg text-gray-600">
+              {plainCategory.description}
+            </p>
           )}
           <p className="text-sm text-gray-500 mt-2">
             {total} product{total !== 1 ? "s" : ""} available
           </p>
         </div>
 
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <MobileFilterToggle>
+            <ProductsFilters categories={plainCategories} />
+          </MobileFilterToggle>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside className="lg:w-64 shrink-0">
+          {/* Desktop Filters Sidebar */}
+          <aside className="hidden lg:block lg:w-64 shrink-0">
             <Suspense fallback={<LoadingSpinner />}>
               <ProductsFilters categories={plainCategories} />
             </Suspense>

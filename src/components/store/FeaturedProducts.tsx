@@ -1,88 +1,134 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Star, ShoppingCart, Heart } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useCartStore, useWishlistStore } from "@/store";
 import toast from "react-hot-toast";
 
+interface Product {
+  _id: string;
+  name: string;
+  slug: string;
+  price: number;
+  comparePrice?: number;
+  images: Array<{ url: string; publicId: string }>;
+  ratings: {
+    average: number;
+    count: number;
+  };
+  stock: number;
+  sizes: Array<{ size: string; stock: number }>;
+  colors: Array<{ name: string; hexCode: string }>;
+}
+
 export default function FeaturedProducts() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const { addItem } = useCartStore();
   const { addItem: addToWishlist, isInWishlist } = useWishlistStore();
 
-  // Temporary mock data - will be replaced with real data later
-  const products = [
-    {
-      id: "1",
-      name: "Classic Denim Jacket",
-      price: 2999,
-      comparePrice: 3999,
-      image: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
-      rating: 4.8,
-      reviews: 124,
-    },
-    {
-      id: "2",
-      name: "Cotton T-Shirt",
-      price: 799,
-      comparePrice: 1299,
-      image:
-        "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400",
-      rating: 4.5,
-      reviews: 89,
-    },
-    {
-      id: "3",
-      name: "Slim Fit Jeans",
-      price: 1999,
-      comparePrice: 2999,
-      image:
-        "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400",
-      rating: 4.7,
-      reviews: 156,
-    },
-    {
-      id: "4",
-      name: "Summer Dress",
-      price: 2499,
-      comparePrice: 3499,
-      image:
-        "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400",
-      rating: 4.9,
-      reviews: 203,
-    },
-  ];
+  useEffect(() => {
+    fetchFeaturedProducts();
+  }, []);
 
-  const handleAddToCart = (product: (typeof products)[0]) => {
+  const fetchFeaturedProducts = async () => {
+    try {
+      const response = await fetch("/api/products?featured=true&limit=8");
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch featured products:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product: Product) => {
+    const defaultSize = product.sizes[0]?.size || "M";
+    const defaultColor = product.colors[0]?.name || "Default";
+
     addItem({
-      id: `${product.id}-M-default`,
-      productId: product.id,
+      id: `${product._id}-${defaultSize}-${defaultColor}`,
+      productId: product._id,
       name: product.name,
       price: product.price,
-      image: product.image,
-      size: "M",
-      color: "Default",
+      image: product.images[0]?.url || "",
+      size: defaultSize,
+      color: defaultColor,
       quantity: 1,
-      stock: 10,
+      stock: product.stock,
     });
     toast.success("Added to cart!");
   };
 
-  const handleToggleWishlist = (product: (typeof products)[0]) => {
-    if (isInWishlist(product.id)) {
+  const handleToggleWishlist = (product: Product) => {
+    if (isInWishlist(product._id)) {
       toast.error("Already in wishlist");
     } else {
       addToWishlist({
-        id: product.id,
-        productId: product.id,
+        id: product._id,
+        productId: product._id,
         name: product.name,
         price: product.price,
-        image: product.image,
-        slug: product.name.toLowerCase().replace(/\s+/g, "-"),
+        image: product.images[0]?.url || "",
+        slug: product.slug,
       });
       toast.success("Added to wishlist!");
     }
   };
+
+  if (loading) {
+    return (
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                Featured Products
+              </h2>
+              <p className="text-gray-600">Handpicked favorites just for you</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse"
+              >
+                <div className="h-64 bg-gray-200"></div>
+                <div className="p-4 space-y-3">
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return (
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Featured Products
+            </h2>
+            <p className="text-gray-600">No featured products available yet</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16">
@@ -103,86 +149,132 @@ export default function FeaturedProducts() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <div
-              key={product.id}
-              className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
-            >
-              {/* Image */}
-              <div className="relative overflow-hidden">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+          {products.map((product) => {
+            const discount = product.comparePrice
+              ? Math.round(
+                  ((product.comparePrice - product.price) /
+                    product.comparePrice) *
+                    100,
+                )
+              : 0;
 
-                {/* Discount Badge */}
-                <div className="absolute top-4 left-4">
-                  <span className="bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                    {Math.round(
-                      ((product.comparePrice - product.price) /
-                        product.comparePrice) *
-                        100,
+            return (
+              <div
+                key={product._id}
+                className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                {/* Image */}
+                <Link href={`/products/${product.slug}`}>
+                  <div className="relative overflow-hidden">
+                    {product.images[0] ? (
+                      <img
+                        src={product.images[0].url}
+                        alt={product.name}
+                        className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-64 bg-linear-to-br from-primary-400 to-primary-600"></div>
                     )}
-                    % OFF
-                  </span>
-                </div>
 
-                {/* Wishlist Button */}
-                <button
-                  onClick={() => handleToggleWishlist(product)}
-                  className={`absolute top-4 right-4 bg-white p-2 rounded-full shadow-md transition-colors ${
-                    isInWishlist(product.id)
-                      ? "text-red-500"
-                      : "hover:bg-primary-500 hover:text-white"
-                  }`}
-                >
-                  <Heart
-                    className="w-5 h-5"
-                    fill={isInWishlist(product.id) ? "currentColor" : "none"}
-                  />
-                </button>
+                    {/* Discount Badge */}
+                    {discount > 0 && (
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-primary-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          {discount}% OFF
+                        </span>
+                      </div>
+                    )}
 
-                {/* Quick Add to Cart - Shows on Hover */}
-                <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button fullWidth onClick={() => handleAddToCart(product)}>
-                    <ShoppingCart className="w-4 h-4" />
-                    Add to Cart
-                  </Button>
-                </div>
-              </div>
+                    {/* Out of Stock Badge */}
+                    {product.stock === 0 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold">
+                          Out of Stock
+                        </span>
+                      </div>
+                    )}
 
-              {/* Product Info */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-1">
-                  {product.name}
-                </h3>
+                    {/* Wishlist Button */}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleToggleWishlist(product);
+                      }}
+                      className={`absolute top-4 right-4 bg-white p-2 rounded-full shadow-md transition-colors ${
+                        isInWishlist(product._id)
+                          ? "text-red-500"
+                          : "hover:bg-primary-500 hover:text-white"
+                      }`}
+                    >
+                      <Heart
+                        className="w-5 h-5"
+                        fill={
+                          isInWishlist(product._id) ? "currentColor" : "none"
+                        }
+                      />
+                    </button>
 
-                {/* Rating */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">
-                      {product.rating}
+                    {/* Quick Add to Cart - Shows on Hover */}
+                    {product.stock > 0 && (
+                      <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          fullWidth
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleAddToCart(product);
+                          }}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+
+                {/* Product Info */}
+                <div className="p-4">
+                  <Link href={`/products/${product.slug}`}>
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-primary-500">
+                      {product.name}
+                    </h3>
+                  </Link>
+
+                  {/* Rating */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-sm font-medium">
+                        {product.ratings.average.toFixed(1)}
+                      </span>
+                    </div>
+                    <span className="text-sm text-gray-500">
+                      ({product.ratings.count})
                     </span>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    ({product.reviews})
-                  </span>
-                </div>
 
-                {/* Price */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xl font-bold text-gray-900">
-                    ₹{product.price}
-                  </span>
-                  <span className="text-sm text-gray-500 line-through">
-                    ₹{product.comparePrice}
-                  </span>
+                  {/* Price */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold text-gray-900">
+                      ₹{product.price}
+                    </span>
+                    {product.comparePrice && (
+                      <span className="text-sm text-gray-500 line-through">
+                        ₹{product.comparePrice}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+
+        {/* View All Button (Mobile) */}
+        <div className="mt-8 text-center lg:hidden">
+          <Link href="/products">
+            <Button variant="outline">View All Products</Button>
+          </Link>
         </div>
       </div>
     </section>

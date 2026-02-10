@@ -4,8 +4,13 @@ import Product from "@/models/Product";
 import Category from "@/models/Category";
 import ProductsGrid from "@/components/store/ProductsGrid";
 import ProductsFilters from "@/components/store/ProductsFilters";
+import MobileFilterToggle from "@/components/store/MobileFilterToggle";
 import { LoadingSpinner } from "@/components/ui";
-import { serializeProduct } from "@/lib/serialize";
+import {
+  serializeProduct,
+  serializeDoc,
+  serializeCategory,
+} from "@/lib/serialize";
 
 interface PageProps {
   searchParams: Promise<{
@@ -31,11 +36,7 @@ export default async function ProductsPage({ searchParams }: PageProps) {
     .sort({ name: 1 })
     .lean();
 
-  const plainCategories = categories.map((cat) => ({
-    _id: cat._id.toString(),
-    name: cat.name,
-    slug: cat.slug,
-  }));
+  const plainCategories = categories.map(serializeCategory);
 
   // Build query
   const query: any = { isActive: true };
@@ -105,27 +106,13 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   const total = await Product.countDocuments(query);
 
-  // Replace this section:
-  // const plainProducts = products.map((product) => ({
-  //   ...product,
-  //   _id: product._id.toString(),
-  //   category: {
-  //     _id: product.category._id.toString(),
-  //     name: product.category.name,
-  //     slug: product.category.slug,
-  //   },
-  //   createdAt: product.createdAt.toISOString(),
-  //   updatedAt: product.updatedAt.toISOString(),
-  // }));
-
-  // With this:
   const plainProducts = products.map(serializeProduct);
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             All Products
           </h1>
@@ -134,9 +121,16 @@ export default async function ProductsPage({ searchParams }: PageProps) {
           </p>
         </div>
 
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4">
+          <MobileFilterToggle>
+            <ProductsFilters categories={plainCategories} />
+          </MobileFilterToggle>
+        </div>
+
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <aside className="lg:w-64 shrink-0">
+          {/* Desktop Filters Sidebar */}
+          <aside className="hidden lg:block lg:w-64 shrink-0">
             <Suspense fallback={<LoadingSpinner />}>
               <ProductsFilters categories={plainCategories} />
             </Suspense>
