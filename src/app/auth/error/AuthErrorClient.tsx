@@ -5,14 +5,25 @@ import Link from "next/link";
 import { Button } from "@/components/ui";
 import { AlertCircle } from "lucide-react";
 
-export default function AuthAPIErrorPage() {
+export default function AuthErrorClient() {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
-  console.log("Auth Error:", error); // For debugging
+  const getErrorMessage = (error: string | null) => {
+    switch (error) {
+      case "Configuration":
+        return "There is a problem with the server configuration.";
+      case "AccessDenied":
+        return "You do not have permission to sign in.";
+      case "Verification":
+        return "The verification token has expired or has already been used.";
+      default:
+        return "An error occurred during authentication.";
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <div className="flex justify-center mb-4">
@@ -25,17 +36,11 @@ export default function AuthAPIErrorPage() {
             Authentication Error
           </h2>
 
-          <p className="text-gray-600 mb-2">
-            Error: {error || "Unknown error"}
-          </p>
-
-          <p className="text-sm text-gray-500 mb-6">
-            Please check the browser console for more details.
-          </p>
+          <p className="text-gray-600 mb-6">{getErrorMessage(error)}</p>
 
           <div className="space-y-3">
             <Link href="/auth/signin">
-              <Button fullWidth>Back to Sign In</Button>
+              <Button fullWidth>Try Again</Button>
             </Link>
 
             <Link href="/">
