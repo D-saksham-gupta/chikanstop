@@ -4,7 +4,11 @@ import ProductForm from "@/components/admin/ProductForm";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
-import { serializeProduct, serializeDoc } from "@/lib/serialize";
+import {
+  serializeProduct,
+  serializeDoc,
+  serializeCategory,
+} from "@/lib/serialize";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -47,7 +51,7 @@ export default async function EditProductPage({ params }: PageProps) {
   //   slug: cat.slug,
   // }));
 
-  const plainCategories = categories.map(serializeDoc);
+  const plainCategories = categories.map(serializeCategory);
 
   return (
     <div className="max-w-4xl">

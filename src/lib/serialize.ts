@@ -1,3 +1,14 @@
+export interface PlainCategory {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /**
  * Serialize MongoDB documents to plain objects
  * Handles _id conversion and removes non-serializable properties
@@ -166,5 +177,24 @@ export function serializeReview(review: any) {
     updatedAt: obj.updatedAt
       ? obj.updatedAt.toISOString()
       : new Date().toISOString(),
+  };
+}
+
+export function serializeCategory(category: any): PlainCategory {
+  if (!category) {
+    throw new Error("serializeCategory: category is required");
+  }
+
+  const obj = category.toObject ? category.toObject() : category;
+
+  return {
+    _id: obj._id.toString(),
+    name: obj.name,
+    slug: obj.slug,
+    description: obj.description,
+    image: obj.image,
+    isActive: obj.isActive ?? true,
+    createdAt: obj.createdAt ? obj.createdAt.toISOString() : undefined,
+    updatedAt: obj.updatedAt ? obj.updatedAt.toISOString() : undefined,
   };
 }
