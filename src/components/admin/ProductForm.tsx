@@ -114,13 +114,18 @@ export default function ProductForm({
     setIsLoading(true);
 
     try {
+      const totalSizeStock = sizes.reduce(
+        (sum, s) => sum + (parseInt(s.stock.toString()) || 0),
+        0,
+      );
+
       const payload = {
         ...formData,
         price: parseFloat(formData.price),
         comparePrice: formData.comparePrice
           ? parseFloat(formData.comparePrice)
           : undefined,
-        stock: parseInt(formData.stock),
+        stock: totalSizeStock,
         sizes,
         colors,
         tags: formData.tags
@@ -251,7 +256,6 @@ export default function ProductForm({
       {/* Inventory */}
       <Card className="p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">Inventory</h2>
-
         <Input
           label="Stock Quantity"
           name="stock"
@@ -261,7 +265,11 @@ export default function ProductForm({
           placeholder="100"
           required
         />
-
+        // After the stock input, add:
+        <p className="text-sm text-gray-600 mt-1">
+          Total stock across all sizes:{" "}
+          {sizes.reduce((sum, s) => sum + (s.stock || 0), 0)}
+        </p>
         <Card className="p-6">
           <h2 className="text-xl font-bold text-gray-900 mb-4">
             Product Images
@@ -272,7 +280,6 @@ export default function ProductForm({
             maxImages={5}
           />
         </Card>
-
         {/* Sizes */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">
@@ -323,7 +330,6 @@ export default function ProductForm({
             ))}
           </div>
         </div>
-
         {/* Colors */}
         <div className="mt-6">
           <div className="flex items-center justify-between mb-3">

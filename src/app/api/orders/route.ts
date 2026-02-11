@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     await dbConnect();
 
-    // Verify product availability and prices
+    // Verify product availability and update stock
     for (const item of items) {
       const product = await Product.findById(item.product);
 
@@ -56,21 +56,60 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Check overall stock
       if (product.stock < item.quantity) {
         return NextResponse.json(
           {
             success: false,
-            error: `Insufficient stock for ${product.name}`,
+            error: `Insufficient stock for ${product.name}. Only ${product.stock} available.`,
           },
           { status: 400 },
         );
       }
 
-      // Update product stock
+      // Find the specific size in the product
+      const sizeIndex = product.sizes.findIndex(
+        (s: any) => s.size === item.size,
+      );
+
+      if (sizeIndex === -1) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Size ${item.size} not available for ${product.name}`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Check size-specific stock
+      if (product.sizes[sizeIndex].stock < item.quantity) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Insufficient stock for ${product.name} in size ${item.size}. Only ${product.sizes[sizeIndex].stock} available.`,
+          },
+          { status: 400 },
+        );
+      }
+
+      // Update stock
       product.stock -= item.quantity;
+      product.sizes[sizeIndex].stock -= item.quantity;
+
+      // Mark the sizes array as modified for Mongoose
+      product.markModified("sizes");
+
       await product.save();
+
+      console.log(`Stock updated for ${product.name}:`, {
+        newTotalStock: product.stock,
+        size: item.size,
+        newSizeStock: product.sizes[sizeIndex].stock,
+      });
     }
 
+    // Create order
     // Create order
     const order = await Order.create({
       orderNumber: generateOrderNumber(),
@@ -78,7 +117,8 @@ export async function POST(req: NextRequest) {
       items,
       shippingAddress,
       paymentMethod: paymentMethod || "COD",
-      paymentStatus: paymentMethod === "COD" ? "Pending" : "Paid",
+      paymentId: body.paymentId || undefined, // Add payment ID from Razorpay
+      paymentStatus: paymentMethod === "Razorpay" ? "Paid" : "Pending",
       orderStatus: "Pending",
       subtotal,
       shippingCost,

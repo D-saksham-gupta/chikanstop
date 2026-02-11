@@ -47,6 +47,9 @@ const OrderSchema = new Schema(
       enum: ["Pending", "Paid", "Failed"],
       default: "Pending",
     },
+    paymentId: {
+      type: String,
+    },
     orderStatus: {
       type: String,
       enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"],
