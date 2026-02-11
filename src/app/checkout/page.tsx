@@ -582,7 +582,6 @@ export default function CheckoutPage() {
 
                   <label className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-primary-500 transition-colors">
                     <input
-                      disabled
                       type="radio"
                       name="paymentMethod"
                       value="Razorpay"
