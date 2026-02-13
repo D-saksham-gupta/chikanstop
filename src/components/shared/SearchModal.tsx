@@ -4,8 +4,12 @@ import { useState, useEffect } from "react";
 import { useUIStore } from "@/store";
 import { X, Search, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+// Inside component:
 
 export default function SearchModal() {
+  const router = useRouter();
   const { isSearchOpen, setSearchOpen } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -18,25 +22,50 @@ export default function SearchModal() {
     }
   }, []);
 
-  const handleSearch = (query: string) => {
-    if (!query.trim()) return;
+  // const handleSearch = (query: string) => {
+  //   if (!query.trim()) return;
 
-    // Save to recent searches
-    const updated = [query, ...recentSearches.filter((s) => s !== query)].slice(
-      0,
-      5,
-    );
-    setRecentSearches(updated);
-    localStorage.setItem("recentSearches", JSON.stringify(updated));
+  //   // Save to recent searches
+  //   const updated = [query, ...recentSearches.filter((s) => s !== query)].slice(
+  //     0,
+  //     5,
+  //   );
+  //   setRecentSearches(updated);
+  //   localStorage.setItem("recentSearches", JSON.stringify(updated));
 
-    // Navigate to search results
-    window.location.href = `/products?search=${encodeURIComponent(query)}`;
-    setSearchOpen(false);
-  };
+  //   // Navigate to search results
+  //   window.location.href = `/products?search=${encodeURIComponent(query)}`;
+  //   setSearchOpen(false);
+  // };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSearch(searchQuery);
+    if (searchQuery.trim()) {
+      // Save to recent searches
+      const updated = [
+        searchQuery,
+        ...recentSearches.filter((s) => s !== searchQuery),
+      ].slice(0, 5);
+      setRecentSearches(updated);
+      localStorage.setItem("recentSearches", JSON.stringify(updated));
+
+      // Navigate to search page
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
+      setSearchQuery("");
+    }
+  };
+
+  // Also update handleRecentSearch:
+  const handleRecentSearch = (term: string) => {
+    router.push(`/search?q=${encodeURIComponent(term)}`);
+    setSearchOpen(false);
+  };
+
+  // Also update handleTrendingSearch:
+  const handleTrendingSearch = (term: string) => {
+    router.push(`/search?q=${encodeURIComponent(term)}`);
+    setSearchOpen(false);
   };
 
   const clearRecentSearches = () => {
@@ -58,7 +87,7 @@ export default function SearchModal() {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
+        className="fixed inset-0 bg-black opacity-50 z-50 transition-opacity"
         onClick={() => setSearchOpen(false)}
       />
 
@@ -106,7 +135,7 @@ export default function SearchModal() {
                   {recentSearches.map((search, index) => (
                     <button
                       key={index}
-                      onClick={() => handleSearch(search)}
+                      onClick={() => handleRecentSearch(search)}
                       className="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors text-gray-700"
                     >
                       {search}
@@ -126,7 +155,7 @@ export default function SearchModal() {
                 {trendingSearches.map((search) => (
                   <button
                     key={search}
-                    onClick={() => handleSearch(search)}
+                    onClick={() => handleTrendingSearch(search)}
                     className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
                   >
                     {search}
