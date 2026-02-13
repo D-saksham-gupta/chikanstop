@@ -10,6 +10,7 @@ import {
   serializeProduct,
   serializeDoc,
   serializeCategory,
+  filterNull,
 } from "@/lib/serialize";
 
 interface PageProps {
@@ -106,7 +107,8 @@ export default async function ProductsPage({ searchParams }: PageProps) {
 
   const total = await Product.countDocuments(query);
 
-  const plainProducts = products.map(serializeProduct);
+  //const plainProducts = products.map(serializeProduct);
+  const plainProducts = filterNull(products.map(serializeProduct));
 
   return (
     <div className="bg-gray-50 min-h-screen">

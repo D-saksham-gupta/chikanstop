@@ -4,7 +4,7 @@ import Order from "@/models/Order";
 import { Card, Badge } from "@/components/ui";
 import Link from "next/link";
 import { Eye, Package } from "lucide-react";
-import { serializeOrder } from "@/lib/serialize";
+import { filterNull, serializeOrder } from "@/lib/serialize";
 
 export default async function AdminOrdersPage() {
   await requireAdmin();
@@ -36,7 +36,8 @@ export default async function AdminOrdersPage() {
   // }));
 
   // const plainOrders = orders.map(serializeOrder);
-  const plainOrders = orders.map(serializeOrder).filter(Boolean);
+  // const plainOrders = orders.map(serializeOrder).filter(Boolean);
+  const plainOrders = filterNull(orders.map(serializeOrder));
 
   // Calculate stats
   const totalOrders = plainOrders.length;

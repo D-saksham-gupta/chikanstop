@@ -13,6 +13,7 @@ import {
   serializeProduct,
   serializeDoc,
   serializeCategory,
+  filterNull,
 } from "@/lib/serialize";
 
 interface PageProps {
@@ -117,7 +118,8 @@ export default async function CategoryPage({
 
   const total = await Product.countDocuments(query);
 
-  const plainProducts = products.map(serializeProduct);
+  //const plainProducts = products.map(serializeProduct);
+  const plainProducts = filterNull(products.map(serializeProduct));
 
   const plainCategory = {
     _id: category._id.toString(),

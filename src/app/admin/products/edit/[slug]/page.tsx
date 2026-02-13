@@ -8,6 +8,7 @@ import {
   serializeProduct,
   serializeDoc,
   serializeCategory,
+  filterNull,
 } from "@/lib/serialize";
 
 interface PageProps {
@@ -43,7 +44,7 @@ export default async function EditProductPage({ params }: PageProps) {
   //   updatedAt: product.updatedAt.toISOString(),
   // };
 
-  const plainProduct = serializeProduct(product);
+  //const plainProduct = serializeProduct(product);
 
   // const plainCategories = categories.map((cat) => ({
   //   _id: cat._id.toString(),
@@ -51,7 +52,9 @@ export default async function EditProductPage({ params }: PageProps) {
   //   slug: cat.slug,
   // }));
 
-  const plainCategories = categories.map(serializeCategory);
+  //const plainCategories = categories.map(serializeCategory);
+  const plainProduct = serializeProduct(product);
+  const plainCategories = filterNull(categories.map(serializeCategory));
 
   return (
     <div className="max-w-4xl">

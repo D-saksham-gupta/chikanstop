@@ -4,7 +4,7 @@ import Product from "@/models/Product";
 import Review from "@/models/Review";
 import ProductDetailClient from "@/components/store/ProductDetailClient";
 import RelatedProducts from "@/components/store/RelatedProducts";
-import { serializeProduct, serializeReview } from "@/lib/serialize";
+import { filterNull, serializeProduct, serializeReview } from "@/lib/serialize";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -48,11 +48,17 @@ export default async function ProductDetailPage({ params }: PageProps) {
       .exec();
 
     // Convert to plain objects using serialization helpers
+    // const plainProduct = serializeProduct(product);
+    // const plainReviews = reviews.map(serializeReview).filter(Boolean);
+    // const plainRelatedProducts = relatedProducts
+    //   .map(serializeProduct)
+    //   .filter(Boolean);
+
     const plainProduct = serializeProduct(product);
-    const plainReviews = reviews.map(serializeReview).filter(Boolean);
-    const plainRelatedProducts = relatedProducts
-      .map(serializeProduct)
-      .filter(Boolean);
+    const plainReviews = filterNull(reviews.map(serializeReview));
+    const plainRelatedProducts = filterNull(
+      relatedProducts.map(serializeProduct),
+    );
 
     return (
       <div className="bg-gray-50 min-h-screen">

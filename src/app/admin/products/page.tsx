@@ -5,7 +5,7 @@ import { Plus, Edit, Eye } from "lucide-react";
 import dbConnect from "@/lib/mongodb";
 import Product from "@/models/Product";
 import DeleteProductButton from "@/components/admin/DeleteProductButton";
-import { serializeProduct } from "@/lib/serialize";
+import { filterNull, serializeProduct } from "@/lib/serialize";
 
 export default async function AdminProductsPage() {
   await requireAdmin();
@@ -33,7 +33,8 @@ export default async function AdminProductsPage() {
   //   updatedAt: product.updatedAt.toISOString(),
   // }));
 
-  const plainProducts = products.map(serializeProduct);
+  //const plainProducts = products.map(serializeProduct);
+  const plainProducts = filterNull(products.map(serializeProduct));
 
   return (
     <div className="space-y-6">
