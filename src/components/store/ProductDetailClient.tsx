@@ -47,13 +47,16 @@ interface Review {
   _id: string;
   rating: number;
   comment: string;
-  user: {
-    _id: string;
-    name: string;
-    image?: string;
-  };
+  user:
+    | {
+        _id: string;
+        name: string;
+        image?: string;
+      }
+    | string; // Allow string for cases where user is not populated
   createdAt: string;
   isVerifiedPurchase: boolean;
+  images?: any[];
 }
 
 interface ProductDetailClientProps {
@@ -433,48 +436,54 @@ export default function ProductDetailClient({
           </div>
         ) : (
           <div className="space-y-6">
-            {reviews.map((review) => (
-              <div
-                key={review._id}
-                className="border-b border-gray-200 pb-6 last:border-0"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                      <span className="text-gray-700 font-medium">
-                        {review.user.name.charAt(0).toUpperCase()}
-                      </span>
+            {reviews.map((review) => {
+              // Handle user being either object or string
+              const userName =
+                typeof review.user === "object"
+                  ? review.user.name
+                  : "Anonymous";
+
+              return (
+                <div
+                  key={review._id}
+                  className="border-b border-gray-200 pb-6 last:border-0"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                        <span className="text-gray-700 font-medium">
+                          {userName.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{userName}</p>
+                        <p className="text-sm text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {review.user.name}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(review.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
+                    {review.isVerifiedPurchase && (
+                      <Badge variant="success">Verified Purchase</Badge>
+                    )}
                   </div>
-                  {review.isVerifiedPurchase && (
-                    <Badge variant="success">Verified Purchase</Badge>
-                  )}
-                </div>
 
-                <div className="flex items-center gap-2 mb-3">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-4 h-4 ${
-                        star <= review.rating
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
+                  <div className="flex items-center gap-2 mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${
+                          star <= review.rating
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
 
-                <p className="text-gray-700">{review.comment}</p>
-              </div>
-            ))}
+                  <p className="text-gray-700">{review.comment}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
