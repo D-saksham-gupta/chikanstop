@@ -35,7 +35,8 @@ export default async function AdminOrdersPage() {
   //     : new Date().toISOString(),
   // }));
 
-  const plainOrders = orders.map(serializeOrder);
+  // const plainOrders = orders.map(serializeOrder);
+  const plainOrders = orders.map(serializeOrder).filter(Boolean);
 
   // Calculate stats
   const totalOrders = plainOrders.length;

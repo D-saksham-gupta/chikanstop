@@ -11,49 +11,45 @@ export interface PlainCategory {
 
 /**
  * Serialize MongoDB documents to plain objects
- * Handles _id conversion and removes non-serializable properties
  */
-export function serializeDoc<T>(doc: any): T {
-  if (!doc) return doc;
+export function serializeDoc<T>(doc: any): T | null {
+  if (!doc) return null;
 
-  if (Array.isArray(doc)) {
-    return doc.map((item) => serializeDoc(item)) as T;
-  }
+  try {
+    // Handle arrays
+    if (Array.isArray(doc)) {
+      return doc.map((item) => serializeDoc(item)) as T;
+    }
 
-  if (doc._id) {
-    const obj = doc.toObject ? doc.toObject() : doc;
-    return {
-      ...obj,
-      _id: obj._id.toString(),
-      createdAt: obj.createdAt
-        ? new Date(obj.createdAt).toISOString()
-        : undefined,
-      updatedAt: obj.updatedAt
-        ? new Date(obj.updatedAt).toISOString()
-        : undefined,
-    } as T;
-  }
+    // Handle plain objects
+    if (typeof doc === "object" && doc !== null) {
+      const obj = doc.toObject ? doc.toObject() : doc;
+      const result: any = {};
 
-  if (typeof doc === "object" && doc !== null) {
-    const result: any = {};
-    for (const key in doc) {
-      if (doc.hasOwnProperty(key)) {
-        const value = doc[key];
-        if (key === "_id" && value && typeof value === "object") {
-          result[key] = value.toString();
-        } else if (value instanceof Date) {
-          result[key] = value.toISOString();
-        } else if (typeof value === "object" && value !== null) {
-          result[key] = serializeDoc(value);
-        } else {
-          result[key] = value;
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          const value = obj[key];
+
+          if (key === "_id" && value && typeof value === "object") {
+            result[key] = value.toString();
+          } else if (value instanceof Date) {
+            result[key] = value.toISOString();
+          } else if (typeof value === "object" && value !== null) {
+            result[key] = serializeDoc(value);
+          } else {
+            result[key] = value;
+          }
         }
       }
-    }
-    return result as T;
-  }
 
-  return doc;
+      return result as T;
+    }
+
+    return doc;
+  } catch (error) {
+    console.error("Error serializing doc:", error);
+    return null;
+  }
 }
 
 /**
@@ -66,16 +62,8 @@ export function serializeProduct(product: any) {
     const obj = product.toObject ? product.toObject() : product;
 
     return {
+      ...obj,
       _id: obj._id?.toString() || "",
-      name: obj.name || "",
-      slug: obj.slug || "",
-      description: obj.description || "",
-      price: obj.price || 0,
-      comparePrice: obj.comparePrice || null,
-      stock: obj.stock || 0,
-      isFeatured: obj.isFeatured || false,
-      isActive: obj.isActive || true,
-      tags: obj.tags || [],
       category: obj.category?._id
         ? {
             _id: obj.category._id.toString(),
@@ -84,7 +72,7 @@ export function serializeProduct(product: any) {
           }
         : typeof obj.category === "string"
           ? obj.category
-          : obj.category?.toString() || "",
+          : "",
       sizes: (obj.sizes || []).map((s: any) => ({
         size: s.size || "",
         stock: s.stock || 0,
@@ -119,40 +107,37 @@ export function serializeProduct(product: any) {
 
 /**
  * Serialize review with proper type handling
- * NOTE: Do NOT use spread operator on review object
- * Always explicitly pick fields to avoid non-serializable MongoDB fields
  */
 export function serializeReview(review: any) {
   if (!review) return null;
 
   try {
-    // Always convert to plain object first
     const obj = review.toObject ? review.toObject() : review;
 
-    // Explicitly pick only the fields we need
-    // DO NOT use spread operator as it copies non-serializable fields
     return {
+      ...obj,
       _id: obj._id?.toString() || "",
       product: obj.product?._id
         ? obj.product._id.toString()
-        : obj.product?.toString() || "",
+        : typeof obj.product === "string"
+          ? obj.product
+          : "",
       user: obj.user?._id
         ? {
             _id: obj.user._id.toString(),
             name: obj.user.name || "Anonymous",
             image: obj.user.image || "",
           }
-        : {
-            _id: obj.user?.toString() || "",
-            name: "Anonymous",
-            image: "",
-          },
-      rating: Number(obj.rating) || 0,
+        : typeof obj.user === "string"
+          ? obj.user
+          : "",
+      rating: obj.rating || 0,
       comment: obj.comment || "",
-      isVerifiedPurchase: Boolean(obj.isVerifiedPurchase) || false,
+      isVerifiedPurchase: obj.isVerifiedPurchase || false,
       images: (obj.images || []).map((img: any) => ({
         url: img.url || "",
         publicId: img.publicId || "",
+        _id: img._id ? img._id.toString() : undefined,
       })),
       createdAt: obj.createdAt
         ? new Date(obj.createdAt).toISOString()
@@ -177,8 +162,8 @@ export function serializeOrder(order: any) {
     const obj = order.toObject ? order.toObject() : order;
 
     return {
+      ...obj,
       _id: obj._id?.toString() || "",
-      orderNumber: obj.orderNumber || "",
       user: obj.user?._id
         ? {
             _id: obj.user._id.toString(),
@@ -186,43 +171,14 @@ export function serializeOrder(order: any) {
             email: obj.user.email || "",
             phone: obj.user.phone || "",
           }
-        : {
-            _id: obj.user?.toString() || "",
-            name: "",
-            email: "",
-            phone: "",
-          },
+        : obj.user?.toString(),
       items: (obj.items || []).map((item: any) => ({
+        ...item,
         _id: item._id ? item._id.toString() : undefined,
         product: item.product?._id
           ? item.product._id.toString()
           : item.product?.toString() || "",
-        name: item.name || "",
-        image: item.image || "",
-        price: item.price || 0,
-        quantity: item.quantity || 0,
-        size: item.size || "",
-        color: item.color || "",
       })),
-      shippingAddress: {
-        fullName: obj.shippingAddress?.fullName || "",
-        phone: obj.shippingAddress?.phone || "",
-        addressLine1: obj.shippingAddress?.addressLine1 || "",
-        addressLine2: obj.shippingAddress?.addressLine2 || "",
-        city: obj.shippingAddress?.city || "",
-        state: obj.shippingAddress?.state || "",
-        pincode: obj.shippingAddress?.pincode || "",
-        country: obj.shippingAddress?.country || "",
-      },
-      paymentMethod: obj.paymentMethod || "",
-      paymentStatus: obj.paymentStatus || "",
-      paymentId: obj.paymentId || "",
-      orderStatus: obj.orderStatus || "",
-      subtotal: obj.subtotal || 0,
-      shippingCost: obj.shippingCost || 0,
-      tax: obj.tax || 0,
-      total: obj.total || 0,
-      trackingNumber: obj.trackingNumber || "",
       createdAt: obj.createdAt
         ? new Date(obj.createdAt).toISOString()
         : new Date().toISOString(),
@@ -234,6 +190,13 @@ export function serializeOrder(order: any) {
     console.error("Error serializing order:", error);
     return null;
   }
+}
+
+/**
+ * Filter null values from serialized arrays
+ */
+export function filterNull<T>(arr: (T | null)[]): T[] {
+  return arr.filter((item): item is T => item !== null);
 }
 
 export function serializeCategory(category: any): PlainCategory {

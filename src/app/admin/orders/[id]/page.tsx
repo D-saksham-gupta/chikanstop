@@ -27,26 +27,12 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // const plainOrder = {
-  //   ...order,
-  //   _id: order._id.toString(),
-  //   user: {
-  //     _id: order.user._id.toString(),
-  //     name: order.user.name,
-  //     email: order.user.email,
-  //     phone: order.user.phone || "N/A",
-  //   },
-  //   items: order.items.map((item: any) => ({
-  //     ...item,
-  //     _id: item._id?.toString(),
-  //     product: item.product?._id?.toString() || "",
-  //   })),
-  //   createdAt: order.createdAt
-  //     ? new Date(order.createdAt).toISOString()
-  //     : new Date().toISOString(),
-  // };
-
   const plainOrder = serializeOrder(order);
+
+  // If serialization fails, show 404
+  if (!plainOrder) {
+    notFound();
+  }
 
   return (
     <div className="space-y-6">
@@ -140,7 +126,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               </p>
               <p>
                 <span className="font-medium">Phone:</span>{" "}
-                {plainOrder.user.phone}
+                {plainOrder.user.phone || "N/A"}
               </p>
             </div>
           </Card>
@@ -196,7 +182,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                 <span className="text-gray-600">Method:</span>
                 <span className="font-medium">{plainOrder.paymentMethod}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-gray-600">Status:</span>
                 <Badge
                   variant={
@@ -206,6 +192,14 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
                   {plainOrder.paymentStatus}
                 </Badge>
               </div>
+              {plainOrder.paymentId && (
+                <div className="flex flex-col gap-1 pt-2">
+                  <span className="text-gray-600 text-sm">Payment ID:</span>
+                  <span className="text-xs font-mono bg-gray-100 p-2 rounded break-all">
+                    {plainOrder.paymentId}
+                  </span>
+                </div>
+              )}
             </div>
           </Card>
 

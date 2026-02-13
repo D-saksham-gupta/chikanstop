@@ -51,6 +51,9 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
   // };
 
   const plainOrder = serializeOrder(order);
+  if (!plainOrder) {
+    notFound();
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">

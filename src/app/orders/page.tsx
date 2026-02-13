@@ -37,7 +37,8 @@ export default async function OrdersPage() {
   //     : new Date().toISOString(),
   // }));
 
-  const plainOrders = orders.map(serializeOrder);
+  //  const plainOrders = orders.map(serializeOrder);
+  const plainOrders = orders.map(serializeOrder).filter(Boolean);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -159,14 +160,15 @@ export default async function OrdersPage() {
                     View Details
                     <ChevronRight className="w-4 h-4" />
                   </Link>
-                  {order.orderStatus === "Delivered" && (
+                  {/* {order.orderStatus === "Delivered" && (
                     <Link
+                      
                       href={`/orders/${order._id}/review`}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg font-medium transition-colors"
                     >
                       Write Review
                     </Link>
-                  )}
+                  )} */}
                 </div>
               </Card>
             ))}
