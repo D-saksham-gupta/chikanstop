@@ -36,6 +36,11 @@ export const authConfig: NextAuthConfig = {
             console.log("User has no password (OAuth user)");
             return null;
           }
+          if (user.isBlocked) {
+            throw new Error(
+              "Your account has been blocked. Please contact support.",
+            );
+          }
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password as string,
@@ -79,6 +84,10 @@ export const authConfig: NextAuthConfig = {
             role: isAdmin ? "admin" : "user",
             emailVerified: new Date(),
           });
+        }
+        // Check if user is blocked
+        if (existingUser.isBlocked) {
+          return false; // Deny sign in
         }
       }
       return true;
